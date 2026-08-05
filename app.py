@@ -40,13 +40,13 @@ def init_db():
             date_removed TEXT
         )
     ''')
-    # Create default admin user
+    # Default login credentials
     user = db.execute("SELECT * FROM users WHERE username = 'admin'").fetchone()
     if not user:
         db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'password123'))
     db.commit()
 
-# Create tables when application starts
+# Build database tables on startup
 with app.app_context():
     init_db()
 
