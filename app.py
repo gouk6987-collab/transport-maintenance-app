@@ -50,6 +50,9 @@ def add_vehicle():
 
     return redirect(url_for('dashboard'))
 
-if __name__ == '__main__':
+# Run database setup immediately when the server starts
+with app.app_context():
     init_db()
+
+if __name__ == '__main__':
     app.run(debug=True)
