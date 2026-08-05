@@ -13,8 +13,7 @@ def get_db():
 
 def init_db():
     db = get_db()
-    
-    # Create users table if not exists
+    # Create users table
     db.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,8 +21,7 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
-    
-    # Create vehicles table if not exists
+    # Create vehicles table
     db.execute('''
         CREATE TABLE IF NOT EXISTS vehicles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,15 +40,13 @@ def init_db():
             date_removed TEXT
         )
     ''')
-    
-    # Create default admin user if not exists
+    # Create default admin user
     user = db.execute("SELECT * FROM users WHERE username = 'admin'").fetchone()
     if not user:
         db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'password123'))
-        
     db.commit()
 
-# Initialize tables safely when server loads
+# Create tables when application starts
 with app.app_context():
     init_db()
 
