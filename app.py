@@ -46,9 +46,30 @@ def init_db():
         db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'password123'))
     db.commit()
 
-# Build database tables on startup
 with app.app_context():
     init_db()
+
+# --- STEP 1: REGISTER ROUTE HERE ---
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        db = get_db()
+        existing_user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        
+        if existing_user:
+            error = 'Username already taken. Please choose another.'
+        elif not username or not password:
+            error = 'Please fill out all fields.'
+        else:
+            db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            db.commit()
+            return redirect(url_for('login'))
+            
+    return render_template('register.html', error=error)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
