@@ -40,7 +40,7 @@ def init_db():
                 date_removed TEXT
             )
         ''')
-        # Insert or update the DT  account password to DuhanTransport1981
+        # Insert or update the DT account password
         db.execute("""
             INSERT INTO users (username, password) VALUES ('DT', 'DuhanTransport1981')
             ON CONFLICT(username) DO UPDATE SET password = excluded.password
