@@ -40,9 +40,9 @@ def init_db():
                 date_removed TEXT
             )
         ''')
-        # Ensure default admin user exists with password DuhanTransport1981
+        # Insert default DT user account
         db.execute("""
-            INSERT INTO users (username, password) VALUES ('admin', 'DuhanTransport1981')
+            INSERT INTO users (username, password) VALUES ('DT', 'DuhanTransport1981')
             ON CONFLICT(username) DO UPDATE SET password = excluded.password
         """)
         db.commit()
@@ -128,25 +128,4 @@ def add_vehicle():
             vehicle_type, registration_number, make, model, year, last_roadworthy_date,
             vin_chassis_no, gcm_rating, atm_rating, pbs_permit_no,
             pbs_expiry_date, date_added, date_removed
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (
-            request.form.get('vehicle_type'),
-            request.form.get('registration_number'),
-            request.form.get('make'),
-            request.form.get('model'),
-            request.form.get('year'),
-            request.form.get('last_roadworthy_date'),
-            request.form.get('vin_chassis_no'),
-            request.form.get('gcm_rating'),
-            request.form.get('atm_rating'),
-            request.form.get('pbs_permit_no'),
-            request.form.get('pbs_expiry_date'),
-            request.form.get('date_added'),
-            request.form.get('date_removed')
-        )
-    )
-    db.commit()
-    return redirect(url_for('dashboard'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?,
