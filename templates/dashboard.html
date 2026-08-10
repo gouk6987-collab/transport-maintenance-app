@@ -6,17 +6,22 @@
     <title>Vehicle Register - 2026</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='background.css') }}">
     <style>
-        body {
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto !important; /* Forces normal page scrolling */
             font-family: Arial, sans-serif;
             color: #ffffff;
-            margin: 20px;
+            background-color: #121212;
         }
         .container {
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 20px auto;
             background: rgba(0, 0, 0, 0.85);
             padding: 25px;
             border-radius: 10px;
+            box-sizing: border-box;
         }
         .card {
             background: rgba(255, 255, 255, 0.1);
@@ -26,9 +31,15 @@
         }
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 12px;
             margin-top: 15px;
+        }
+        label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #ddd;
         }
         input, select {
             padding: 8px 12px;
@@ -95,21 +106,23 @@
             color: #a8dadc;
         }
 
-        /* Print styles: cleans up the output when printing to paper */
+        /* Clean printable view */
         @media print {
-            /* Hide top bar, buttons, forms, and search fields */
             .btn-print, .card, form, nav, button, .no-print {
                 display: none !important;
             }
-            body {
+            body, html {
                 background-color: #ffffff !important;
                 color: #000000 !important;
                 margin: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
             }
             .container {
                 background: transparent !important;
                 max-width: 100% !important;
                 padding: 0 !important;
+                margin: 0 !important;
             }
             .table-wrapper {
                 overflow: visible !important;
@@ -150,4 +163,5 @@
                         <input type="text" name="registration_number" placeholder="e.g. 1HDX824" required>
                     </div>
                     <div>
-</html>
+                        <label>Vehicle Make</label>
+                        <input type="text" name="make" placeholder="
