@@ -8,169 +8,170 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #121212;
             color: #ffffff;
-            margin: 20px;
+            margin: 0;
+            padding: 20px;
         }
         .container {
+            width: 95%;
             max-width: 1400px;
             margin: 0 auto;
             background: rgba(0, 0, 0, 0.85);
-            padding: 25px;
-            border-radius: 10px;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.1);
             padding: 20px;
             border-radius: 8px;
-            margin-bottom: 25px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
         .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 12px;
-            margin-top: 15px;
         }
-        input, select {
-            padding: 8px 12px;
+        .field {
+            flex: 1 1 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #ccc;
+        }
+        input {
+            padding: 8px;
             font-size: 13px;
-            border-radius: 5px;
-            border: 1px solid #555;
+            border-radius: 4px;
+            border: 1px solid #444;
             background: #222;
             color: #fff;
-            width: 100%;
-            box-sizing: border-box;
         }
         .btn-add {
-            grid-column: 1 / -1;
-            padding: 12px;
-            font-size: 15px;
+            width: 100%;
+            padding: 10px;
             background-color: #28a745;
             color: white;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            border-radius: 4px;
             font-weight: bold;
-            margin-top: 10px;
+            cursor: pointer;
+            margin-top: 15px;
         }
-        .btn-search {
-            padding: 10px 20px;
-            background-color: #0d2740;
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .btn-print {
+            padding: 8px 16px;
+            background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
+            font-weight: bold;
         }
-        .table-wrapper {
+        .table-container {
             overflow-x: auto;
-            margin-top: 20px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
-            white-space: nowrap;
+            font-size: 12px;
         }
         th, td {
-            padding: 10px;
-            text-align: left;
+            padding: 8px 10px;
             border: 1px solid #444;
+            text-align: left;
+            white-space: nowrap;
         }
         th {
-            background-color: #1f2937;
+            background-color: #222;
         }
-        th.mass-mgmt {
-            background-color: #1d3557;
-            color: #a8dadc;
+        @media print {
+            .card, .controls, .header p, button {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .container {
+                background: transparent !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            th, td {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Vehicle Register - 2026</h1>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1>Vehicle Register - 2026</h1>
-    <p>Logged in as: <strong>{{ user }}</strong> | <a href="/logout" style="color: #ff6b6b;">Logout</a></p>
-</div>
+        <div class="header">
+            <h1>Vehicle Register - 2026</h1>
+            <p>Logged in as: <strong>{{ user }}</strong> | <a href="/logout" style="color: #ff6b6b;">Logout</a></p>
+        </div>
 
         <div class="card">
             <h3>Add New Vehicle Entry</h3>
             <form method="POST" action="/add_vehicle">
                 <div class="form-grid">
-                    <div>
-                        <label>Vehicle Type (PM/T/D)</label>
-                        <input type="text" name="vehicle_type" placeholder="e.g. PM, T, D" required>
-                    </div>
-                    <div>
-                        <label>Vehicle Reg.</label>
-                        <input type="text" name="registration_number" placeholder="e.g. 1HDX824" required>
-                    </div>
-                    <div>
-                        <label>Vehicle Make</label>
-                        <input type="text" name="make" placeholder="e.g. Scania">
-                    </div>
-                    <div>
-                        <label>Year</label>
-                        <input type="number" name="year" placeholder="e.g. 2016">
-                    </div>
-                    <div>
-                        <label>Last Roadworthy Date</label>
-                        <input type="text" name="last_roadworthy_date" placeholder="DD/MM/YY">
-                    </div>
-                    <div>
-                        <label>Vin / Chassis No.</label>
-                        <input type="text" name="vin_chassis_no" placeholder="VIN...">
-                    </div>
-                    <div>
-                        <label>Manufacturer GCM Rating</label>
-                        <input type="text" name="gcm_rating" placeholder="e.g. 130000">
-                    </div>
-                    <div>
-                        <label>ATM Rating</label>
-                        <input type="text" name="atm_rating" placeholder="e.g. 47000">
-                    </div>
-                    <div>
-                        <label>AMMS / PBS Permit #</label>
-                        <input type="text" name="pbs_permit_no" placeholder="e.g. 6035515">
-                    </div>
-                    <div>
-                        <label>AMMS / PBS Expiry Date</label>
-                        <input type="text" name="pbs_expiry_date" placeholder="DD/MM/YY">
-                    </div>
-                    <div>
-                        <label>Date Added to List</label>
-                        <input type="text" name="date_added" placeholder="DD/MM/YY">
-                    </div>
-                    <div>
-                        <label>Date Removed from List</label>
-                        <input type="text" name="date_removed" placeholder="DD/MM/YY">
-                    </div>
-                    
-                    <button type="submit" class="btn-add">+ Add Record to Register</button>
+                    <div class="field"><label>Vehicle Type (PM/T/D)</label><input type="text" name="vehicle_type" required></div>
+                    <div class="field"><label>Vehicle Reg.</label><input type="text" name="registration_number" required></div>
+                    <div class="field"><label>Vehicle Make</label><input type="text" name="make"></div>
+                    <div class="field"><label>Year</label><input type="number" name="year"></div>
+                    <div class="field"><label>Last Roadworthy Date</label><input type="text" name="last_roadworthy_date"></div>
+                    <div class="field"><label>Vin / Chassis No.</label><input type="text" name="vin_chassis_no"></div>
+                    <div class="field"><label>GCM Rating</label><input type="text" name="gcm_rating"></div>
+                    <div class="field"><label>ATM Rating</label><input type="text" name="atm_rating"></div>
+                    <div class="field"><label>PBS Permit #</label><input type="text" name="pbs_permit_no"></div>
+                    <div class="field"><label>PBS Expiry Date</label><input type="text" name="pbs_expiry_date"></div>
+                    <div class="field"><label>Date Added</label><input type="text" name="date_added"></div>
+                    <div class="field"><label>Date Removed</label><input type="text" name="date_removed"></div>
                 </div>
+                <button type="submit" class="btn-add">+ Add Record to Register</button>
             </form>
         </div>
 
-        <form method="GET" action="/" style="display: flex; gap: 10px;">
-            <input type="text" name="search" placeholder="Search by Rego or Make..." value="{{ search_query }}" style="max-width: 300px;">
-            <button type="submit" class="btn-search">Search</button>
-        </form>
+        <div class="controls">
+            <form method="GET" action="/" style="display: flex; gap: 8px;">
+                <input type="text" name="search" placeholder="Search Rego or Make..." value="{{ search_query }}">
+                <button type="submit" style="padding: 8px 12px; background: #333; color: white; border: none; border-radius: 4px;">Search</button>
+            </form>
+            <button onclick="window.print()" class="btn-print">🖨️ Print Records</button>
+        </div>
 
-        <div class="table-wrapper">
+        <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Vehicle Type (PM/T/D)</th>
-                        <th>Vehicle Reg.</th>
-                        <th>Vehicle Make</th>
+                        <th>Type</th>
+                        <th>Rego</th>
+                        <th>Make</th>
                         <th>Year</th>
-                        <th>Last Roadworthy Date</th>
-                        <th>Vin / Chassis No.</th>
-                        <th class="mass-mgmt">Manufacturer GCM Rating</th>
-                        <th class="mass-mgmt">ATM Rating</th>
-                        <th class="mass-mgmt">AMMS / PBS Permit #</th>
-                        <th class="mass-mgmt">AMMS / PBS Permit Expiry Date</th>
-                        <th>Date Added to List</th>
-                        <th>Date Removed from List</th>
+                        <th>Roadworthy Date</th>
+                        <th>VIN / Chassis</th>
+                        <th>GCM</th>
+                        <th>ATM</th>
+                        <th>PBS Permit #</th>
+                        <th>PBS Expiry</th>
+                        <th>Date Added</th>
+                        <th>Date Removed</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -191,7 +192,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="12" style="text-align: center; padding: 20px;">No vehicles found in the register.</td>
+                        <td colspan="12" style="text-align: center;">No vehicles found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
