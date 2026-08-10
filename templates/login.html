@@ -46,7 +46,23 @@
             cursor: pointer;
             margin-top: 10px;
         }
+        button:hover { background-color: #218838; }
         .error { color: #ff6b6b; text-align: center; margin-bottom: 15px; }
+        
+        /* Added styling for the register link */
+        .register-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .register-link a {
+            color: #28a745;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .register-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -66,6 +82,11 @@
             </div>
             <button type="submit">Log In</button>
         </form>
+
+        <div class="register-link">
+            Don't have an account? <a href="{{ url_for('register') }}">Create one here</a>
+        </div>
     </div>
 </body>
+</html>
 </html>
