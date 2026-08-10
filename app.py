@@ -40,10 +40,11 @@ def init_db():
                 date_removed TEXT
             )
         ''')
-        # Ensure default admin user exists
-        user = db.execute("SELECT * FROM users WHERE username = 'admin'").fetchone()
-        if not user:
-            db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'password123'))
+        # Insert or update the admin account password to DuhanTransport1981
+        db.execute("""
+            INSERT INTO users (username, password) VALUES ('admin', 'DuhanTransport1981')
+            ON CONFLICT(username) DO UPDATE SET password = excluded.password
+        """)
         db.commit()
 
 # Initialize DB on start
