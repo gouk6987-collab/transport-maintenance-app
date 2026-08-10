@@ -60,6 +60,18 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .btn-print {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-print:hover {
+            background-color: #0056b3;
+        }
         .table-wrapper {
             overflow-x: auto;
             margin-top: 20px;
@@ -82,15 +94,43 @@
             background-color: #1d3557;
             color: #a8dadc;
         }
+
+        /* Print styles: cleans up the output when printing to paper */
+        @media print {
+            .btn-print, .card, form, nav, button, .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
+            }
+            .container {
+                background: transparent !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #000000 !important;
+                color: #000000 !important;
+                padding: 6px !important;
+            }
+            th {
+                background-color: #f2f2f2 !important;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Vehicle Register - 2026</h1>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1>Vehicle Register - 2026</h1>
-    <p>Logged in as: <strong>{{ user }}</strong> | <a href="/logout" style="color: #ff6b6b;">Logout</a></p>
-</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Vehicle Register - 2026</h1>
+            <p class="no-print">Logged in as: <strong>{{ user }}</strong> | <a href="/logout" style="color: #ff6b6b;">Logout</a></p>
+        </div>
 
         <div class="card">
             <h3>Add New Vehicle Entry</h3>
@@ -150,10 +190,16 @@
             </form>
         </div>
 
-        <form method="GET" action="/" style="display: flex; gap: 10px;">
-            <input type="text" name="search" placeholder="Search by Rego or Make..." value="{{ search_query }}" style="max-width: 300px;">
-            <button type="submit" class="btn-search">Search</button>
-        </form>
+        <div style="display: flex; justify-content: space-between; align-items: center;" class="no-print">
+            <form method="GET" action="/" style="display: flex; gap: 10px;">
+                <input type="text" name="search" placeholder="Search by Rego or Make..." value="{{ search_query }}" style="max-width: 300px;">
+                <button type="submit" class="btn-search">Search</button>
+            </form>
+
+            <button onclick="window.print()" class="btn-print">
+                🖨️ Print Vehicle Records
+            </button>
+        </div>
 
         <div class="table-wrapper">
             <table>
