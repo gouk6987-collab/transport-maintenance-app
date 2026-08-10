@@ -1,167 +1,152 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vehicle Register - 2026</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='background.css') }}">
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow-y: auto !important; /* Forces normal page scrolling */
-            font-family: Arial, sans-serif;
-            color: #ffffff;
-            background-color: #121212;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 20px auto;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 25px;
-            border-radius: 10px;
-            box-sizing: border-box;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin-top: 15px;
-        }
-        label {
-            display: block;
-            font-size: 12px;
-            margin-bottom: 4px;
-            color: #ddd;
-        }
-        input, select {
-            padding: 8px 12px;
-            font-size: 13px;
-            border-radius: 5px;
-            border: 1px solid #555;
-            background: #222;
-            color: #fff;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .btn-add {
-            grid-column: 1 / -1;
-            padding: 12px;
-            font-size: 15px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .btn-search {
-            padding: 10px 20px;
-            background-color: #0d2740;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-print {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-print:hover {
-            background-color: #0056b3;
-        }
-        .table-wrapper {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #444;
-        }
-        th {
-            background-color: #1f2937;
-        }
-        th.mass-mgmt {
-            background-color: #1d3557;
-            color: #a8dadc;
-        }
+import sqlite3
+import os
+from flask import Flask, render_template, request, redirect, url_for, session
 
-        /* Clean printable view */
-        @media print {
-            .btn-print, .card, form, nav, button, .no-print {
-                display: none !important;
-            }
-            body, html {
-                background-color: #ffffff !important;
-                color: #000000 !important;
-                margin: 0 !important;
-                height: auto !important;
-                overflow: visible !important;
-            }
-            .container {
-                background: transparent !important;
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .table-wrapper {
-                overflow: visible !important;
-            }
-            table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-            }
-            th, td {
-                border: 1px solid #000000 !important;
-                color: #000000 !important;
-                padding: 6px !important;
-                font-size: 11px !important;
-            }
-            th {
-                background-color: #f2f2f2 !important;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1>Vehicle Register - 2026</h1>
-            <p class="no-print">Logged in as: <strong>{{ user }}</strong> | <a href="/logout" style="color: #ff6b6b;">Logout</a></p>
-        </div>
+app = Flask(__name__)
+app.secret_key = 'super_secret_key_change_this_later'
+DATABASE = 'database.db'
 
-        <div class="card">
-            <h3>Add New Vehicle Entry</h3>
-            <form method="POST" action="/add_vehicle">
-                <div class="form-grid">
-                    <div>
-                        <label>Vehicle Type (PM/T/D)</label>
-                        <input type="text" name="vehicle_type" placeholder="e.g. PM, T, D" required>
-                    </div>
-                    <div>
-                        <label>Vehicle Reg.</label>
-                        <input type="text" name="registration_number" placeholder="e.g. 1HDX824" required>
-                    </div>
-                    <div>
-                        <label>Vehicle Make</label>
-                        <input type="text" name="make" placeholder="
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    with get_db() as db:
+        # Create users table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL
+            )
+        ''')
+        # Create vehicles table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS vehicles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_type TEXT,
+                registration_number TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year INTEGER,
+                last_roadworthy_date TEXT,
+                vin_chassis_no TEXT,
+                gcm_rating TEXT,
+                atm_rating TEXT,
+                pbs_permit_no TEXT,
+                pbs_expiry_date TEXT,
+                date_added TEXT,
+                date_removed TEXT
+            )
+        ''')
+        # Ensure default admin user exists with password DuhanTransport1981
+        db.execute("""
+            INSERT INTO users (username, password) VALUES ('admin', 'DuhanTransport1981')
+            ON CONFLICT(username) DO UPDATE SET password = excluded.password
+        """)
+        db.commit()
+
+# Initialize DB on start
+init_db()
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            error = 'Please fill out all fields.'
+        else:
+            try:
+                db = get_db()
+                existing_user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+                
+                if existing_user:
+                    error = 'Username already taken. Please choose another.'
+                else:
+                    db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+                    db.commit()
+                    return redirect(url_for('login'))
+            except Exception as e:
+                error = f"Database error: {str(e)}"
+            
+    return render_template('register.html', error=error)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        db = get_db()
+        user = db.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password)).fetchone()
+        
+        if user:
+            session['logged_in'] = True
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+        else:
+            error = 'Invalid username or password.'
+            
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/')
+def dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+        
+    search_query = request.args.get('search', '')
+    db = get_db()
+    
+    if search_query:
+        vehicles = db.execute(
+            "SELECT * FROM vehicles WHERE registration_number LIKE ? OR make LIKE ?", 
+            (f'%{search_query}%', f'%{search_query}%')
+        ).fetchall()
+    else:
+        vehicles = db.execute("SELECT * FROM vehicles").fetchall()
+        
+    return render_template('dashboard.html', vehicles=vehicles, search_query=search_query, user=session.get('username'))
+
+@app.route('/add_vehicle', methods=['POST'])
+def add_vehicle():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    db = get_db()
+    db.execute(
+        """INSERT INTO vehicles (
+            vehicle_type, registration_number, make, model, year, last_roadworthy_date,
+            vin_chassis_no, gcm_rating, atm_rating, pbs_permit_no,
+            pbs_expiry_date, date_added, date_removed
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            request.form.get('vehicle_type'),
+            request.form.get('registration_number'),
+            request.form.get('make'),
+            request.form.get('model'),
+            request.form.get('year'),
+            request.form.get('last_roadworthy_date'),
+            request.form.get('vin_chassis_no'),
+            request.form.get('gcm_rating'),
+            request.form.get('atm_rating'),
+            request.form.get('pbs_permit_no'),
+            request.form.get('pbs_expiry_date'),
+            request.form.get('date_added'),
+            request.form.get('date_removed')
+        )
+    )
+    db.commit()
+    return redirect(url_for('dashboard'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
