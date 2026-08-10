@@ -12,43 +12,42 @@ def get_db():
     return conn
 
 def init_db():
-    db = get_db()
-    # Create users table
-    db.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
-        )
-    ''')
-    # Create vehicles table
-    db.execute('''
-        CREATE TABLE IF NOT EXISTS vehicles (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            vehicle_type TEXT,
-            registration_number TEXT NOT NULL,
-            make TEXT,
-            model TEXT,
-            year INTEGER,
-            last_roadworthy_date TEXT,
-            vin_chassis_no TEXT,
-            gcm_rating TEXT,
-            atm_rating TEXT,
-            pbs_permit_no TEXT,
-            pbs_expiry_date TEXT,
-            date_added TEXT,
-            date_removed TEXT
-        )
-    ''')
-    # Create default admin user if not exists
-    user = db.execute("SELECT * FROM users WHERE username = 'admin'").fetchone()
-    if not user:
-        db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'password123'))
-    db.commit()
+    with get_db() as db:
+        # Create users table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL
+            )
+        ''')
+        # Create vehicles table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS vehicles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_type TEXT,
+                registration_number TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year INTEGER,
+                last_roadworthy_date TEXT,
+                vin_chassis_no TEXT,
+                gcm_rating TEXT,
+                atm_rating TEXT,
+                pbs_permit_no TEXT,
+                pbs_expiry_date TEXT,
+                date_added TEXT,
+                date_removed TEXT
+            )
+        ''')
+        # Ensure default admin user exists
+        user = db.execute("SELECT * FROM users WHERE username = 'admin'").fetchone()
+        if not user:
+            db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'password123'))
+        db.commit()
 
-# Ensure tables are built when the app boots up on Render
-with app.app_context():
-    init_db()
+# Initialize DB on start
+init_db()
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
