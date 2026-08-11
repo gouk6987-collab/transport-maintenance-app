@@ -134,11 +134,11 @@ def dashboard():
     
     if search_query:
         cur.execute(
-            "SELECT * FROM vehicles WHERE registration_number ILIKE %s OR make ILIKE %s;", 
+            "SELECT * FROM vehicles WHERE registration_number ILIKE %s OR make ILIKE %s ORDER BY id DESC;", 
             (f'%{search_query}%', f'%{search_query}%')
         )
     else:
-        cur.execute("SELECT * FROM vehicles;")
+        cur.execute("SELECT * FROM vehicles ORDER BY id DESC;")
         
     vehicles = cur.fetchall()
     cur.close()
@@ -175,6 +175,19 @@ def add_vehicle():
             request.form.get('date_removed')
         )
     )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+@app.route('/delete_vehicle/<int:id>', methods=['GET'])
+def delete_vehicle(id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM vehicles WHERE id = %s;", (id,))
     conn.commit()
     cur.close()
     conn.close()
