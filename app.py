@@ -1,9 +1,8 @@
 import os
-import io
 import psycopg2
-import pandas as pd
 from psycopg2.extras import RealDictCursor
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from weasyprint import HTML
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_change_this_later'
@@ -135,79 +134,4 @@ def dashboard():
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     if search_query:
-        cur.execute(
-            "SELECT * FROM vehicles WHERE registration_number ILIKE %s OR make ILIKE %s;", 
-            (f'%{search_query}%', f'%{search_query}%')
-        )
-    else:
-        cur.execute("SELECT * FROM vehicles;")
-        
-    vehicles = cur.fetchall()
-    cur.close()
-    conn.close()
-        
-    return render_template('dashboard.html', vehicles=vehicles, search_query=search_query, user=session.get('username'))
-
-@app.route('/add_vehicle', methods=['POST'])
-def add_vehicle():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        """INSERT INTO vehicles (
-            vehicle_type, registration_number, make, model, year, last_roadworthy_date,
-            vin_chassis_no, gcm_rating, atm_rating, pbs_permit_no,
-            pbs_expiry_date, date_added, date_removed
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""",
-        (
-            request.form.get('vehicle_type'),
-            request.form.get('registration_number'),
-            request.form.get('make'),
-            request.form.get('model'),
-            request.form.get('year') or None,
-            request.form.get('last_roadworthy_date'),
-            request.form.get('vin_chassis_no'),
-            request.form.get('gcm_rating'),
-            request.form.get('atm_rating'),
-            request.form.get('pbs_permit_no'),
-            request.form.get('pbs_expiry_date'),
-            request.form.get('date_added'),
-            request.form.get('date_removed')
-        )
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
-    return redirect(url_for('dashboard'))
-
-@app.route('/export')
-def export_vehicles():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-        
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM vehicles;")
-    vehicles = cur.fetchall()
-    cur.close()
-    conn.close()
-    
-    df = pd.DataFrame(vehicles)
-    output = io.BytesIO()
-    
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Vehicle Register')
-    
-    output.seek(0)
-    
-    return send_file(
-        output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        download_name='Duhan_Transport_Vehicle_Register.xlsx'
-    )
-
-if __name__ == '__main__':
-    app.run(debug=True)
+        cur.execute
