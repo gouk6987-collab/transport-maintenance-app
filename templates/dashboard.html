@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vehicle Register - 2026</title>
+    <title>Duhan Transport - Vehicle Register</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='background.css') }}">
     <style>
         body {
@@ -14,12 +14,13 @@
             padding: 20px;
         }
         .container {
-            width: 95%;
+            width: 100%;
             max-width: 1400px;
             margin: 0 auto;
             background: rgba(0, 0, 0, 0.85);
             padding: 20px;
             border-radius: 8px;
+            box-sizing: border-box;
         }
         .header {
             display: flex;
@@ -34,12 +35,12 @@
             margin-bottom: 20px;
         }
         .form-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 12px;
+            width: 100%;
         }
         .field {
-            flex: 1 1 200px;
             display: flex;
             flex-direction: column;
         }
@@ -49,15 +50,17 @@
             color: #ccc;
         }
         input {
+            width: 100%;
             padding: 8px;
             font-size: 13px;
             border-radius: 4px;
             border: 1px solid #444;
             background: #222;
             color: #fff;
+            box-sizing: border-box;
         }
         .btn-add {
-            width: 100%;
+            grid-column: 1 / -1;
             padding: 10px;
             background-color: #28a745;
             color: white;
@@ -65,22 +68,33 @@
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         .controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            display: inline-block;
+        }
+        .btn-excel {
+            background-color: #28a745;
+            color: white;
         }
         .btn-print {
-            padding: 8px 16px;
             background-color: #007bff;
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
         }
         .table-container {
             overflow-x: auto;
@@ -100,7 +114,7 @@
             background-color: #222;
         }
         @media print {
-            .card, .controls, .header p, button {
+            .card, .controls, .header p, button, a.btn-excel {
                 display: none !important;
             }
             body {
@@ -123,7 +137,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Vehicle Register - 2026</h1>
+            <h1>Duhan Transport - Vehicle Register</h1>
             <p>Logged in as: <strong>{{ user }}</strong> | <a href="/logout" style="color: #ff6b6b;">Logout</a></p>
         </div>
 
@@ -143,8 +157,9 @@
                     <div class="field"><label>PBS Expiry Date</label><input type="text" name="pbs_expiry_date"></div>
                     <div class="field"><label>Date Added</label><input type="text" name="date_added"></div>
                     <div class="field"><label>Date Removed</label><input type="text" name="date_removed"></div>
+                    
+                    <button type="submit" class="btn-add">+ Add Record to Register</button>
                 </div>
-                <button type="submit" class="btn-add">+ Add Record to Register</button>
             </form>
         </div>
 
@@ -153,7 +168,11 @@
                 <input type="text" name="search" placeholder="Search Rego or Make..." value="{{ search_query }}">
                 <button type="submit" style="padding: 8px 12px; background: #333; color: white; border: none; border-radius: 4px;">Search</button>
             </form>
-            <button onclick="window.print()" class="btn-print">🖨️ Print Records</button>
+
+            <div style="display: flex; gap: 10px;">
+                <a href="/export" class="btn-action btn-excel">📥 Download Excel</a>
+                <button onclick="window.print()" class="btn-action btn-print">🖨️ Print Records</button>
+            </div>
         </div>
 
         <div class="table-container">
