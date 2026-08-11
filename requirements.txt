@@ -1,4 +1,4 @@
 Flask
 psycopg2-binary
-weasyprint
+xhtml2pdf
 gunicorn
