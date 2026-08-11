@@ -1,55 +1,69 @@
-import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, session
+import os
+import io
+import psycopg2
+import pandas as pd
+from psycopg2.extras import RealDictCursor
+from flask import Flask, render_template, request, redirect, url_for, session, send_file
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_change_this_later'
-DATABASE = 'database.db'
+
+# Fetch PostgreSQL database URL from Render Environment Variables
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 def init_db():
-    with get_db() as db:
-        # Create users table
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
-            )
-        ''')
-        # Create vehicles table with all matching columns
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS vehicles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                vehicle_type TEXT,
-                registration_number TEXT NOT NULL,
-                make TEXT,
-                model TEXT,
-                year INTEGER,
-                last_roadworthy_date TEXT,
-                vin_chassis_no TEXT,
-                gcm_rating TEXT,
-                atm_rating TEXT,
-                pbs_permit_no TEXT,
-                pbs_expiry_date TEXT,
-                date_added TEXT,
-                date_removed TEXT
-            )
-        ''')
+    if not DATABASE_URL:
+        return
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Create users table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL
+        );
+    ''')
+    
+    # Create vehicles table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS vehicles (
+            id SERIAL PRIMARY KEY,
+            vehicle_type TEXT,
+            registration_number TEXT NOT NULL,
+            make TEXT,
+            model TEXT,
+            year INTEGER,
+            last_roadworthy_date TEXT,
+            vin_chassis_no TEXT,
+            gcm_rating TEXT,
+            atm_rating TEXT,
+            pbs_permit_no TEXT,
+            pbs_expiry_date TEXT,
+            date_added TEXT,
+            date_removed TEXT
+        );
+    ''')
+    
+    # Insert default DT user
+    cur.execute("SELECT * FROM users WHERE username = %s;", ('DT',))
+    user = cur.fetchone()
+    if user:
+        cur.execute("UPDATE users SET password = %s WHERE username = %s;", ('DuhanTransport1981', 'DT'))
+    else:
+        cur.execute("INSERT INTO users (username, password) VALUES (%s, %s);", ('DT', 'DuhanTransport1981'))
         
-        # Safely insert default user 'DT' without compatibility issues
-        user = db.execute("SELECT * FROM users WHERE username = ?", ('DT',)).fetchone()
-        if user:
-            db.execute("UPDATE users SET password = ? WHERE username = ?", ('DuhanTransport1981', 'DT'))
-        else:
-            db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('DT', 'DuhanTransport1981'))
-            
-        db.commit()
+    conn.commit()
+    cur.close()
+    conn.close()
 
-# Initialize DB on start
+# Initialize DB structure on startup
 init_db()
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -63,15 +77,21 @@ def register():
             error = 'Please fill out all fields.'
         else:
             try:
-                db = get_db()
-                existing_user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+                conn = get_db()
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                cur.execute("SELECT * FROM users WHERE username = %s;", (username,))
+                existing_user = cur.fetchone()
                 
                 if existing_user:
-                    error = 'Username already taken. Please choose another.'
+                    error = 'Username already taken.'
                 else:
-                    db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
-                    db.commit()
+                    cur.execute("INSERT INTO users (username, password) VALUES (%s, %s);", (username, password))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
                     return redirect(url_for('login'))
+                cur.close()
+                conn.close()
             except Exception as e:
                 error = f"Database error: {str(e)}"
             
@@ -84,8 +104,12 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        db = get_db()
-        user = db.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password)).fetchone()
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT * FROM users WHERE username = %s AND password = %s;", (username, password))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
         
         if user:
             session['logged_in'] = True
@@ -107,15 +131,20 @@ def dashboard():
         return redirect(url_for('login'))
         
     search_query = request.args.get('search', '')
-    db = get_db()
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     
     if search_query:
-        vehicles = db.execute(
-            "SELECT * FROM vehicles WHERE registration_number LIKE ? OR make LIKE ?", 
+        cur.execute(
+            "SELECT * FROM vehicles WHERE registration_number ILIKE %s OR make ILIKE %s;", 
             (f'%{search_query}%', f'%{search_query}%')
-        ).fetchall()
+        )
     else:
-        vehicles = db.execute("SELECT * FROM vehicles").fetchall()
+        cur.execute("SELECT * FROM vehicles;")
+        
+    vehicles = cur.fetchall()
+    cur.close()
+    conn.close()
         
     return render_template('dashboard.html', vehicles=vehicles, search_query=search_query, user=session.get('username'))
 
@@ -124,19 +153,20 @@ def add_vehicle():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    db = get_db()
-    db.execute(
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
         """INSERT INTO vehicles (
             vehicle_type, registration_number, make, model, year, last_roadworthy_date,
             vin_chassis_no, gcm_rating, atm_rating, pbs_permit_no,
             pbs_expiry_date, date_added, date_removed
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""",
         (
             request.form.get('vehicle_type'),
             request.form.get('registration_number'),
             request.form.get('make'),
             request.form.get('model'),
-            request.form.get('year'),
+            request.form.get('year') or None,
             request.form.get('last_roadworthy_date'),
             request.form.get('vin_chassis_no'),
             request.form.get('gcm_rating'),
@@ -147,8 +177,37 @@ def add_vehicle():
             request.form.get('date_removed')
         )
     )
-    db.commit()
+    conn.commit()
+    cur.close()
+    conn.close()
     return redirect(url_for('dashboard'))
 
+@app.route('/export')
+def export_vehicles():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+        
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM vehicles;")
+    vehicles = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    df = pd.DataFrame(vehicles)
+    output = io.BytesIO()
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Vehicle Register')
+    
+    output.seek(0)
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='Duhan_Transport_Vehicle_Register.xlsx'
+    )
+
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)
