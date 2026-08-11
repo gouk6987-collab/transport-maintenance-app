@@ -1,8 +1,9 @@
 import os
+import io
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
-from weasyprint import HTML
+from xhtml2pdf import pisa
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_change_this_later'
@@ -134,4 +135,11 @@ def dashboard():
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     if search_query:
-        cur.execute
+        cur.execute(
+            "SELECT * FROM vehicles WHERE registration_number ILIKE %s OR make ILIKE %s;", 
+            (f'%{search_query}%', f'%{search_query}%')
+        )
+    else:
+        cur.execute("SELECT * FROM vehicles;")
+        
+    vehicles = cur.
